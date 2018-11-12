@@ -6,7 +6,7 @@ use Nats\ConnectionOptions;
 /**
  * Class ConnectionOptionsTest
  */
-class ConnectionOptionsTest extends \PHPUnit_Framework_TestCase
+class ConnectionOptionsTest extends \PHPUnit\Framework\TestCase
 {
 
 

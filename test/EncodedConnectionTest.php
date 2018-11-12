@@ -9,7 +9,7 @@ use Nats\Encoders\JSONEncoder;
 /**
  * Class EncodedConnectionTest.
  */
-class EncodedConnectionTest extends \PHPUnit_Framework_TestCase
+class EncodedConnectionTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
@@ -73,10 +73,12 @@ class EncodedConnectionTest extends \PHPUnit_Framework_TestCase
      */
     public function testRequest()
     {
+        $count = 0;
         $this->c->subscribe(
             'sayhello',
-            function ($res) {
+            function ($res) use (&$count) {
                 $res->reply('Hello, '.$res->getBody().' !!!');
+                $count++;
             }
         );
 
@@ -87,5 +89,7 @@ class EncodedConnectionTest extends \PHPUnit_Framework_TestCase
                 $this->assertEquals('Hello, McFly !!!', $res->getBody());
             }
         );
+
+        $this->assertEquals(1, $count);
     }
 }

@@ -9,7 +9,7 @@ use Nats\Encoders\PHPEncoder;
 /**
  * Class PHPEncoderTest.
  */
-class PHPEncoderTest extends \PHPUnit_Framework_TestCase
+class PHPEncoderTest extends \PHPUnit\Framework\TestCase
 {
 
     /**

@@ -2,16 +2,15 @@
     "name": "repejota/nats",
     "description": "A nats.io client in PHP",
     "type": "library",
-    "minimum-stability": "dev",
     "license": "MIT",
     "require": {
         "ircmaxell/random-lib": "^1.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "5.*",
-        "phpspec/phpspec": "^3.0",
-        "satooshi/php-coveralls": "2.0.x-dev",
-        "leanphp/phpspec-code-coverage": "^3.2@dev"
+        "phpunit/phpunit": "^7.0",
+        "phpspec/phpspec": "^4.0",
+        "php-coveralls/php-coveralls": "^2.1",
+        "leanphp/phpspec-code-coverage": "^4.2"
     },
     "authors": [
         {
@@ -35,6 +34,12 @@
             "name": "Gorka López de Torre",
             "email": "glopezdetorre@gmail.com",
             "homepage": "http://gorka.io",
+            "role": "Developer"
+        },
+        {
+            "name": "Joshua Eichorn",
+            "email": "joshua.eichorn@pagely.com",
+            "homepage": "http://www.pagely.com",
             "role": "Developer"
         }
     ],
