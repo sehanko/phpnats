@@ -1,4 +1,5 @@
 PHPCS_PHAR = https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+PHPCBF_PHAR = https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar
 COMPOSER_PHAR = https://getcomposer.org/composer.phar
 PHPDOCUMENTOR_PHAR_URL = https://github.com/phpDocumentor/phpDocumentor2/releases/download/v2.9.0/phpDocumentor.phar
 CLEAN_FILES = composer.phar composer.lock phpdoc.phar phpcs.phar phpcbf.phar .idea
@@ -13,7 +14,7 @@ define require_phar
 endef
 
 lint:		## Lint source code
-lint: lint-php lint-psr2 lint-squiz lint-stan
+lint: lint-php lint-psr2 lint-stan
 
 .PHONY: lint-php
 lint-php:
@@ -24,14 +25,17 @@ lint-psr2:
 	$(call require_phar,phpcs.phar,$(PHPCS_PHAR))
 	./phpcs.phar --standard=PSR2 --colors -w -s --warning-severity=0 $(SOURCE_CODE_PATHS)
 
-.PHONY: lint-squiz
-lint-squiz:
-	$(call require_phar,phpcs.phar,$(PHPCS_PHAR))
-	./phpcs.phar --standard=Squiz,./ruleset.xml --colors -w -s --warning-severity=0 $(SOURCE_CODE_PATHS)
-
 .PHONY: lint-stan
 lint-stan:
 	./vendor/bin/phpstan analyze src
+
+.PHONY: phpcbf
+phpcbf:
+	$(call require_phar,phpcbf.phar,$(PHPCBF_PHAR))
+	for i in $(SOURCE_CODE_PATHS); do \
+		./phpcbf.phar --standard=PSR2 $$i ; \
+	done
+
 
 test:		## Execute all tests suites TDD and BDD
 test: test-tdd test-bdd

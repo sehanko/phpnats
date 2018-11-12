@@ -29,7 +29,6 @@ class Connection
     private $connectTimeout = 1;
 
 
-
     /**
      * Enable or disable debug mode.
      *
@@ -63,7 +62,7 @@ class Connection
     /**
      * Number of messages published.
      *
-     * @var int number of messages
+     * @var integer number of messages
      */
     private $pubs = 0;
 
@@ -81,7 +80,7 @@ class Connection
     /**
      * Number of reconnects to the server.
      *
-     * @var int Number of reconnects
+     * @var integer Number of reconnects
      */
     private $reconnects = 0;
 
@@ -138,6 +137,7 @@ class Connection
      * @var Socket
      */
     private $socket;
+
 
     /**
      * Get the socket
@@ -400,7 +400,6 @@ class Connection
      *
      * @throws Exception If subscription not found.
      * @return void
-     *
      */
     public function publish($subject, $payload = null, $inbox = null)
     {
@@ -424,8 +423,7 @@ class Connection
     public function wait($quantity = 0)
     {
         $count = 0;
-        while($this->socket->isActive())
-        {
+        while ($this->socket->isActive()) {
             $line = $this->socket->receive();
 
             if ($line === null) {
