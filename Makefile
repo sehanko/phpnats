@@ -13,7 +13,7 @@ define require_phar
 endef
 
 lint:		## Lint source code
-lint: lint-php lint-psr2 lint-squiz
+lint: lint-php lint-psr2 lint-squiz lint-stan
 
 .PHONY: lint-php
 lint-php:
@@ -29,6 +29,9 @@ lint-squiz:
 	$(call require_phar,phpcs.phar,$(PHPCS_PHAR))
 	./phpcs.phar --standard=Squiz,./ruleset.xml --colors -w -s --warning-severity=0 $(SOURCE_CODE_PATHS)
 
+.PHONY: lint-stan
+lint-stan:
+	./vendor/bin/phpstan analyze src
 
 test:		## Execute all tests suites TDD and BDD
 test: test-tdd test-bdd
