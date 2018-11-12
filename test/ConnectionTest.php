@@ -169,7 +169,7 @@ class ConnectionTest extends \PHPUnit\Framework\TestCase
      */
     public function testSetStreamTimeout()
     {
-        $this->c->setStreamTimeout(1);
+        $this->c->socket()->setTimeout(1);
         $before = time();
         $this->c->request(
             'nonexistantsubject',
@@ -182,7 +182,7 @@ class ConnectionTest extends \PHPUnit\Framework\TestCase
         $this->assertGreaterThan(0, $timeTaken);
         $this->assertLessThan(3, $timeTaken);
 
-        $meta = stream_get_meta_data($this->c->getStreamSocket());
+        $meta = stream_get_meta_data($this->c->socket()->getRawSocket());
 
         $this->assertTrue($meta['timed_out']);
     }
