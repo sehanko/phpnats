@@ -2,7 +2,7 @@
 namespace Nats\tests\Unit;
 
 use Nats;
-use Nats\Connection;
+use Nats\EncodedConnection;
 use Nats\ConnectionOptions;
 use Nats\Encoders\JSONEncoder;
 
@@ -29,7 +29,7 @@ class EncodedConnectionTest extends \PHPUnit\Framework\TestCase
     {
         $encoder = new JSONEncoder();
         $options = new ConnectionOptions();
-        $this->c = new Connection($options, $encoder);
+        $this->c = new EncodedConnection($options, $encoder);
         $this->c->connect();
     }
 

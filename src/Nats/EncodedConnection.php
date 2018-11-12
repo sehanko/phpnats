@@ -25,10 +25,10 @@ class EncodedConnection extends Connection
      * @param ConnectionOptions           $options Connection options object.
      * @param \Nats\Encoders\Encoder|null $encoder Encoder to use with the payload.
      */
-    public function __construct(ConnectionOptions $options = null, Encoder $encoder = null)
+    public function __construct(ConnectionOptions $options = null, Encoder $encoder = null, Socket $socket = null)
     {
         $this->encoder = $encoder;
-        parent::__construct($options);
+        parent::__construct($options, $socket);
     }
 
     /**

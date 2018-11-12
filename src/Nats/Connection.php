@@ -21,6 +21,14 @@ class Connection
      */
     private $debug = false;
 
+    /**
+     * Connection timeout, used by reconnect
+     *
+     * @var float $connectTimeout
+     */
+    private $connectTimeout = 1;
+
+
 
     /**
      * Enable or disable debug mode.
@@ -51,13 +59,6 @@ class Connection
     {
         return $this->pings;
     }
-
-    /**
-     * Chunk size in bytes to use when reading an stream of data.
-     *
-     * @var integer size of chunk.
-     */
-    private $chunkSize = 1500;
 
     /**
      * Number of messages published.
@@ -132,18 +133,21 @@ class Connection
     private $options = null;
 
     /**
-     * Connection timeout
+     * Socket implementation
      *
-     * @var float
+     * @var Socket
      */
-    private $timeout = null;
+    private $socket;
 
     /**
-     * Stream File Pointer.
+     * Get the socket
      *
-     * @var mixed Socket file pointer
+     * @return Socket
      */
-    private $streamSocket;
+    public function socket()
+    {
+        return $this->socket;
+    }
 
     /**
      * Generator object.
@@ -152,53 +156,6 @@ class Connection
      */
     private $randomGenerator;
 
-
-    /**
-     * Sets the chunck size in bytes to be processed when reading.
-     *
-     * @param integer $chunkSize Set byte chunk len to read when reading from wire.
-     *
-     * @return void
-     */
-    public function setChunkSize($chunkSize)
-    {
-        $this->chunkSize = $chunkSize;
-    }
-
-    /**
-     * Set Stream Timeout.
-     *
-     * @param float $seconds Before timeout on stream.
-     *
-     * @return boolean
-     */
-    public function setStreamTimeout($seconds)
-    {
-        if ($this->isConnected() === true) {
-            if (is_numeric($seconds) === true) {
-                try {
-                    $timeout      = number_format($seconds, 3);
-                    $seconds      = floor($timeout);
-                    $microseconds = (($timeout - $seconds) * 1000);
-                    return stream_set_timeout($this->streamSocket, $seconds, $microseconds);
-                } catch (\Exception $e) {
-                    return false;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns an stream socket for this connection.
-     *
-     * @return resource
-     */
-    public function getStreamSocket()
-    {
-        return $this->streamSocket;
-    }
 
     /**
      * Indicates whether $response is an error response.
@@ -210,52 +167,6 @@ class Connection
     private function isErrorResponse($response)
     {
         return substr($response, 0, 4) === '-ERR';
-    }
-
-
-    /**
-     * Checks if the client is connected to a server.
-     *
-     * @return boolean
-     */
-    public function isConnected()
-    {
-        return isset($this->streamSocket);
-    }
-
-    /**
-     * Returns an stream socket to the desired server.
-     *
-     * @param string $address Server url string.
-     * @param float  $timeout Number of seconds until the connect() system call should timeout.
-     *
-     * @throws \Exception Exception raised if connection fails.
-     * @return resource
-     */
-    private function getStream($address, $timeout, $context)
-    {
-        $errno  = null;
-        $errstr = null;
-
-        set_error_handler(
-            function () {
-                return true;
-            }
-        );
-
-        $fp = stream_socket_client($address, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
-        restore_error_handler();
-
-        if ($fp === false) {
-            throw Exception::forStreamSocketClientError($errstr, $errno);
-        }
-
-        $timeout      = number_format($timeout, 3);
-        $seconds      = floor($timeout);
-        $microseconds = (($timeout - $seconds) * 1000);
-        stream_set_timeout($fp, $seconds, $microseconds);
-
-        return $fp;
     }
 
     /**
@@ -293,7 +204,7 @@ class Connection
      *
      * @param ConnectionOptions $options Connection options object.
      */
-    public function __construct(ConnectionOptions $options = null)
+    public function __construct(ConnectionOptions $options = null, Socket $socket = null)
     {
         $this->pings         = 0;
         $this->pubs          = 0;
@@ -309,75 +220,10 @@ class Connection
         if ($options === null) {
             $this->options = new ConnectionOptions();
         }
-    }
 
-    /**
-     * Sends data thought the stream.
-     *
-     * @param string $payload Message data.
-     *
-     * @throws \Exception Raises if fails sending data.
-     * @return void
-     */
-    private function send($payload)
-    {
-        $msg = $payload."\r\n";
-        $len = strlen($msg);
-        while (true) {
-            $written = @fwrite($this->streamSocket, $msg);
-            if ($written === false) {
-                throw new \Exception('Error sending data');
-            }
-
-            if ($written === 0) {
-                throw new \Exception('Broken pipe or closed connection');
-            }
-
-            $len = ($len - $written);
-            if ($len > 0) {
-                $msg = substr($msg, (0 - $len));
-            } else {
-                break;
-            }
+        if ($socket === null) {
+            $this->socket = new Socket();
         }
-
-        if ($this->debug === true) {
-            printf('>>>> %s', $msg);
-        }
-    }
-
-    /**
-     * Receives a message thought the stream.
-     *
-     * @param integer $len Number of bytes to receive.
-     *
-     * @return string
-     */
-    private function receive($len = 0)
-    {
-        if ($len > 0) {
-            $chunkSize     = $this->chunkSize;
-            $line          = null;
-            $receivedBytes = 0;
-            while ($receivedBytes < $len) {
-                $bytesLeft = ($len - $receivedBytes);
-                if ($bytesLeft < $this->chunkSize) {
-                    $chunkSize = $bytesLeft;
-                }
-
-                $readChunk      = fread($this->streamSocket, $chunkSize);
-                $receivedBytes += strlen($readChunk);
-                $line          .= $readChunk;
-            }
-        } else {
-            $line = fgets($this->streamSocket);
-        }
-
-        if ($this->debug === true) {
-            printf('<<<< %s\r\n', $line);
-        }
-
-        return $line;
     }
 
     /**
@@ -387,7 +233,7 @@ class Connection
      */
     private function handlePING()
     {
-        $this->send('PONG');
+        $this->socket->send('PONG');
     }
 
     /**
@@ -414,7 +260,7 @@ class Connection
             $subject = $parts[1];
         }
 
-        $payload = $this->receive($length);
+        $payload = $this->socket->receive($length);
         $msg     = new Message($subject, $payload, $sid, $this);
 
         if (isset($this->subscriptions[$sid]) === false) {
@@ -430,59 +276,27 @@ class Connection
     }
 
     /**
-     * Connect to server.
+     * Connect to the server
      *
-     * @param float $timeout Number of seconds until the connect() system call should timeout.
+     * @param float $timeout Connect timeout
      *
      * @throws \Exception Exception raised if connection fails.
      * @return void
      */
-    public function connect($timeout = null)
+    public function connect($timeout = 10)
     {
-        if ($timeout === null) {
-            $timeout = intval(ini_get('default_socket_timeout'));
-        }
-
-        $this->timeout      = $timeout;
-        $this->streamSocket = $this->getStream(
+        $this->connectTimeout = $timeout;
+        $this->socket->connect(
             $this->options->getAddress(),
             $timeout,
             $this->options->getStreamContext()
         );
-        $this->setStreamTimeout($timeout);
-
-        $infoResponse = $this->receive();
-
-        if ($this->isErrorResponse($infoResponse) === true) {
-            throw Exception::forFailedConnection($infoResponse);
-        } else {
-            $this->processServerInfo($infoResponse);
-            if ($this->serverInfo->isTLSRequired()) {
-                set_error_handler(
-                    function ($errno, $errstr, $errfile, $errline) {
-                        restore_error_handler();
-                        throw Exception::forFailedConnection($errstr);
-                    }
-                );
-
-                if (!stream_socket_enable_crypto(
-                    $this->streamSocket,
-                    true,
-                    STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
-                )
-                ) {
-                    throw Exception::forFailedConnection('Error negotiating crypto');
-                }
-
-                restore_error_handler();
-            }
-        }
 
         $msg = 'CONNECT '.$this->options;
-        $this->send($msg);
-        $this->ping();
-        $pingResponse = $this->receive();
+        $this->socket->send($msg);
 
+        $this->ping();
+        $pingResponse = $this->socket->receive();
         if ($this->isErrorResponse($pingResponse) === true) {
             throw Exception::forFailedPing($pingResponse);
         }
@@ -496,7 +310,7 @@ class Connection
     public function ping()
     {
         $msg = 'PING';
-        $this->send($msg);
+        $this->socket->send($msg);
         $this->pings += 1;
     }
 
@@ -533,7 +347,7 @@ class Connection
     {
         $sid = $this->randomGenerator->generateString(16);
         $msg = 'SUB '.$subject.' '.$sid;
-        $this->send($msg);
+        $this->socket->send($msg);
         $this->subscriptions[$sid] = $callback;
         return $sid;
     }
@@ -551,7 +365,7 @@ class Connection
     {
         $sid = $this->randomGenerator->generateString(16);
         $msg = 'SUB '.$subject.' '.$queue.' '.$sid;
-        $this->send($msg);
+        $this->socket->send($msg);
         $this->subscriptions[$sid] = $callback;
         return $sid;
     }
@@ -571,7 +385,7 @@ class Connection
             $msg = $msg.' '.$quantity;
         }
 
-        $this->send($msg);
+        $this->socket->send($msg);
         if ($quantity === null) {
             unset($this->subscriptions[$sid]);
         }
@@ -596,7 +410,7 @@ class Connection
         }
 
         $msg = $msg.' '.strlen($payload);
-        $this->send($msg."\r\n".$payload);
+        $this->socket->send($msg."\r\n".$payload);
         $this->pubs += 1;
     }
 
@@ -610,15 +424,12 @@ class Connection
     public function wait($quantity = 0)
     {
         $count = 0;
-        $info  = stream_get_meta_data($this->streamSocket);
-        while (is_resource($this->streamSocket) === true &&
-            feof($this->streamSocket) === false &&
-            empty($info['timed_out']) === true
-        ) {
-            $line = $this->receive();
+        while($this->socket->isActive())
+        {
+            $line = $this->socket->receive();
 
-            if ($line === false) {
-                return null;
+            if ($line === null) {
+                return $this;
             }
 
             if (strpos($line, 'PING') === 0) {
@@ -632,11 +443,7 @@ class Connection
                     return $this;
                 }
             }
-
-            $info = stream_get_meta_data($this->streamSocket);
         }
-
-        $this->close();
 
         return $this;
     }
@@ -650,7 +457,7 @@ class Connection
     {
         $this->reconnects += 1;
         $this->close();
-        $this->connect($this->timeout);
+        $this->connect($this->connectTimeout);
     }
 
     /**
@@ -660,11 +467,20 @@ class Connection
      */
     public function close()
     {
-        if ($this->streamSocket === null) {
+        if (!$this->socket->isConnected()) {
             return;
         }
 
-        fclose($this->streamSocket);
-        $this->streamSocket = null;
+        $this->socket->close();
+    }
+
+    /**
+     * Checks if the client is connected to a server.
+     *
+     * @return boolean
+     */
+    public function isConnected()
+    {
+        return $this->socket->isConnected();
     }
 }
