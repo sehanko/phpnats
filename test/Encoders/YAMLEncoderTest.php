@@ -9,7 +9,7 @@ use Nats\Encoders\YAMLEncoder;
 /**
  * Class YAMLEncoderTest.
  */
-class YAMLEncoderTest extends \PHPUnit_Framework_TestCase
+class YAMLEncoderTest extends \PHPUnit\Framework\TestCase
 {
 
     /**

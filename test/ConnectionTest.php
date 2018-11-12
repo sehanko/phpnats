@@ -8,7 +8,7 @@ use Nats\ConnectionOptions;
 /**
  * Class ConnectionTest.
  */
-class ConnectionTest extends \PHPUnit_Framework_TestCase
+class ConnectionTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
@@ -215,7 +215,7 @@ class ConnectionTest extends \PHPUnit_Framework_TestCase
      */
     public function testRefusedConnection()
     {
-        $this->setExpectedException(\Exception::class);
+        $this->expectException(\Exception::class);
 
         $options = new ConnectionOptions();
         $options->setHost('localhost');

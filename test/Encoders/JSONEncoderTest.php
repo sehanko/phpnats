@@ -9,7 +9,7 @@ use Nats\Encoders\JSONEncoder;
 /**
  * Class JSONEncoderTest.
  */
-class JSONEncoderTest extends \PHPUnit_Framework_TestCase
+class JSONEncoderTest extends \PHPUnit\Framework\TestCase
 {
 
     /**
