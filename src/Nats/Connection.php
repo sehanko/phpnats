@@ -445,7 +445,10 @@ class Connection
 
         $this->timeout      = $timeout;
         $this->streamSocket = $this->getStream(
-            $this->options->getAddress(), $timeout, $this->options->getStreamContext());
+            $this->options->getAddress(),
+            $timeout,
+            $this->options->getStreamContext()
+        );
         $this->setStreamTimeout($timeout);
 
         $infoResponse = $this->receive();
@@ -459,10 +462,15 @@ class Connection
                     function ($errno, $errstr, $errfile, $errline) {
                         restore_error_handler();
                         throw Exception::forFailedConnection($errstr);
-                    });
+                    }
+                );
 
                 if (!stream_socket_enable_crypto(
-                        $this->streamSocket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT)) {
+                    $this->streamSocket,
+                    true,
+                    STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                )
+                ) {
                     throw Exception::forFailedConnection('Error negotiating crypto');
                 }
 
@@ -603,7 +611,10 @@ class Connection
     {
         $count = 0;
         $info  = stream_get_meta_data($this->streamSocket);
-        while (is_resource($this->streamSocket) === true && feof($this->streamSocket) === false && empty($info['timed_out']) === true) {
+        while (is_resource($this->streamSocket) === true &&
+            feof($this->streamSocket) === false &&
+            empty($info['timed_out']) === true
+        ) {
             $line = $this->receive();
 
             if ($line === false) {
