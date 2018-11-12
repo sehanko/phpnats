@@ -10,7 +10,8 @@
         "phpunit/phpunit": "^7.0",
         "phpspec/phpspec": "^4.0",
         "php-coveralls/php-coveralls": "^2.1",
-        "leanphp/phpspec-code-coverage": "^4.2"
+        "leanphp/phpspec-code-coverage": "^4.2",
+        "phpstan/phpstan": "^0.10.5"
     },
     "authors": [
         {
