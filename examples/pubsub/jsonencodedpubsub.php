@@ -19,8 +19,8 @@ $client->subscribe(
 $client->publish(
     'foo',
     [
-     'Marty',
-     'McFly',
+        'Marty',
+        'McFly',
     ]
 );
 

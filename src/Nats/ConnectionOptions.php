@@ -94,18 +94,18 @@ class ConnectionOptions
      * @var array
      */
     private $configurable = [
-                             'host',
-                             'port',
-                             'user',
-                             'pass',
-                             'token',
-                             'lang',
-                             'version',
-                             'verbose',
-                             'pedantic',
-                             'reconnect',
-                             'streamContext',
-                            ];
+        'host',
+        'port',
+        'user',
+        'pass',
+        'token',
+        'lang',
+        'version',
+        'verbose',
+        'pedantic',
+        'reconnect',
+        'streamContext',
+    ];
 
 
     /**
@@ -128,7 +128,7 @@ class ConnectionOptions
      */
     public function __construct($options = null)
     {
-        //Default stream context
+        // Default stream context
         $this->streamContext = stream_context_get_default();
 
         if (empty($options) === false) {
@@ -155,11 +155,11 @@ class ConnectionOptions
     public function __toString()
     {
         $a = [
-              'lang'     => $this->lang,
-              'version'  => $this->version,
-              'verbose'  => $this->verbose,
-              'pedantic' => $this->pedantic,
-             ];
+            'lang'     => $this->lang,
+            'version'  => $this->version,
+            'verbose'  => $this->verbose,
+            'pedantic' => $this->pedantic,
+        ];
         if (empty($this->user) === false) {
             $a['user'] = $this->user;
         }

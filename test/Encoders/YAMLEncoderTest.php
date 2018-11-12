@@ -54,14 +54,14 @@ class YAMLEncoderTest extends \PHPUnit\Framework\TestCase
         $this->c->request(
             'sayhello',
             [
-             'foo',
-             'McFly',
+                'foo',
+                'McFly',
             ],
             function ($res) {
                 $this->assertEquals('Hello, McFly !!!', $res->getBody());
             }
         );
-        
+
         $this->c->wait(1);
     }
 }

@@ -45,6 +45,7 @@ class Socket
      */
     private $socket;
 
+
     /**
      * Sets the chunck size in bytes to be processed when reading.
      *
@@ -209,8 +210,8 @@ class Socket
     /**
      * Connect to server.
      *
-     * @param string $address Service address, format tcp://host:port
-     * @param float $timeout Number of seconds until the connect() system call should timeout.
+     * @param string   $address       Service address, format tcp://host:port
+     * @param float    $timeout       Number of seconds until the connect() system call should timeout.
      * @param resource $streamContext A custom stream_context
      *
      * @throws \Exception Exception raised if connection fails.
@@ -246,11 +247,11 @@ class Socket
 
     public function isActive()
     {
-        if (is_resource($this->socket) === true && feof($this->socket) === false)
-        {
+        if (is_resource($this->socket) === true && feof($this->socket) === false) {
             $info = stream_get_meta_data($this->socket);
             return empty($info['timed_out']) === true;
         }
+
         return false;
     }
 }

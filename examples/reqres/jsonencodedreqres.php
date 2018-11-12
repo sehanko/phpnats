@@ -19,8 +19,8 @@ $sid = $client->subscribe(
 $client->request(
     'sayhello',
     [
-     'Marty',
-     'McFly',
+        'Marty',
+        'McFly',
     ],
     function ($message) {
         echo $message->getBody();
