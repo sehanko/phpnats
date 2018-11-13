@@ -28,9 +28,7 @@ class EncodedConnection extends Connection
     public function __construct(ConnectionOptions $options = null, Encoder $encoder = null, Socket $socket = null)
     {
         $this->encoder = $encoder;
-        echo "here\n";
         parent::__construct($options, $socket);
-        echo "there\n";
     }
 
     /**
