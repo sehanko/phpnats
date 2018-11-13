@@ -38,9 +38,9 @@ class SocketNonBlocking extends Socket
      *
      * @param float $timeout seconds
      */
-    public function setTimeout($timeout)
+    public function setReadTimeout($timeout)
     {
-        $this->timeout = $timeout;
+        $this->readTimeout = $timeout;
     }
 
     /**
@@ -101,7 +101,7 @@ class SocketNonBlocking extends Socket
             }
             echo "xxxx loops: $loops\n";
             echo "xxxx bytes: ".strlen($buffer)."\n";
-            printf('<<<< %s\r\n', substr($buffer, 0, 100));
+            printf("<<<< %s\n", substr($buffer, 0, 100));
         }
 
         return $buffer;
