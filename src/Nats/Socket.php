@@ -16,7 +16,7 @@ class Socket
      *
      * @var boolean $debug If debug is enabled.
      */
-    private $debug = false;
+    protected $debug = false;
 
 
     /**
@@ -36,14 +36,14 @@ class Socket
      *
      * @var integer size of chunk.
      */
-    private $chunkSize = 1500;
+    protected $chunkSize = 1500;
 
     /**
      * Stream File Pointer.
      *
      * @var mixed Socket file pointer
      */
-    private $socket;
+    protected $socket;
 
 
     /**
@@ -70,9 +70,7 @@ class Socket
         if ($this->isConnected() === true) {
             if (is_numeric($seconds) === true) {
                 try {
-                    $timeout      = number_format($seconds, 3);
-                    $seconds      = floor($timeout);
-                    $microseconds = (($timeout - $seconds) * 1000);
+                    [$seconds, $microseconds] = $this->secondsToSecondsAndMicroSeconds($seconds);
                     return stream_set_timeout($this->socket, $seconds, $microseconds);
                 } catch (\Exception $e) {
                     return false;
@@ -101,41 +99,6 @@ class Socket
     public function isConnected()
     {
         return isset($this->socket);
-    }
-
-    /**
-     * Returns an stream socket to the desired server.
-     *
-     * @param string $address Server url string.
-     * @param float  $timeout Number of seconds until the connect() system call should timeout.
-     *
-     * @throws \Exception Exception raised if connection fails.
-     * @return resource
-     */
-    private function getStream($address, $timeout, $context)
-    {
-        $errno  = null;
-        $errstr = null;
-
-        set_error_handler(
-            function () {
-                return true;
-            }
-        );
-
-        $fp = stream_socket_client($address, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
-        restore_error_handler();
-
-        if ($fp === false) {
-            throw Exception::forStreamSocketClientError($errstr, $errno);
-        }
-
-        $timeout      = number_format($timeout, 3);
-        $seconds      = floor($timeout);
-        $microseconds = (($timeout - $seconds) * 1000);
-        stream_set_timeout($fp, $seconds, $microseconds);
-
-        return $fp;
     }
 
     /**
@@ -169,7 +132,7 @@ class Socket
         }
 
         if ($this->debug === true) {
-            printf('>>>> %s', $msg);
+            printf(">>>> %s\n", $msg);
         }
     }
 
@@ -201,7 +164,7 @@ class Socket
         }
 
         if ($this->debug === true) {
-            printf('<<<< %s\r\n', $line);
+            printf("<<<< %s\n", $line);
         }
 
         return $line;
@@ -217,17 +180,33 @@ class Socket
      * @throws \Exception Exception raised if connection fails.
      * @return void
      */
-    public function connect($address, $connectTimeout = null, $streamContext = null)
+    public function connect($address, $timeout = null, $streamContext = null)
     {
-        if ($connectTimeout === null) {
-            $connectTimeout = intval(ini_get('default_socket_timeout'));
+        if ($timeout === null) {
+            $timeout = intval(ini_get('default_socket_timeout'));
         }
 
-        $this->socket = $this->getStream(
-            $address,
-            $connectTimeout,
-            $streamContext
+        $errno  = null;
+        $errstr = null;
+
+        set_error_handler(
+            function () {
+                return true;
+            }
         );
+
+        if (empty($context)) {
+            $context = stream_context_create();
+        }
+
+        $this->socket = stream_socket_client($address, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $context);
+        restore_error_handler();
+
+        if ($this->socket === false) {
+            throw Exception::forStreamSocketClientError($errstr, $errno);
+        }
+
+        $this->setTimeout($timeout);
     }
 
     /**
@@ -253,5 +232,14 @@ class Socket
         }
 
         return false;
+    }
+
+    protected function secondsToSecondsAndMicroSeconds($seconds)
+    {
+        $timeout      = number_format($seconds, 6);
+        $seconds      = floor($timeout);
+        $microseconds = (($timeout - $seconds) * 1000000);
+
+        return [$seconds, $microseconds];
     }
 }
