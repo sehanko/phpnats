@@ -15,31 +15,12 @@ class Connection
 {
 
     /**
-     * Show DEBUG info?
-     *
-     * @var boolean $debug If debug is enabled.
-     */
-    private $debug = false;
-
-    /**
      * Connection timeout, used by reconnect
      *
-     * @var float $connectTimeout
+     * @var float $timeout
      */
-    private $connectTimeout = 1;
+    private $timeout = 1;
 
-
-    /**
-     * Enable or disable debug mode.
-     *
-     * @param boolean $debug If debug is enabled.
-     *
-     * @return void
-     */
-    public function setDebug($debug)
-    {
-        $this->debug = $debug;
-    }
 
     /**
      * Number of PINGs.
@@ -210,6 +191,7 @@ class Connection
         $this->pubs          = 0;
         $this->subscriptions = [];
         $this->options       = $options;
+        $this->socket        = $socket;
         if (version_compare(phpversion(), '7.0', '>') === true) {
             $this->randomGenerator = new Php71RandomGenerator();
         } else {
@@ -283,9 +265,9 @@ class Connection
      * @throws \Exception Exception raised if connection fails.
      * @return void
      */
-    public function connect($timeout = 10)
+    public function connect($timeout = null)
     {
-        $this->connectTimeout = $timeout;
+        $this->timeout = $timeout;
         $this->socket->connect(
             $this->options->getAddress(),
             $timeout,
@@ -455,7 +437,7 @@ class Connection
     {
         $this->reconnects += 1;
         $this->close();
-        $this->connect($this->connectTimeout);
+        $this->connect($this->timeout);
     }
 
     /**

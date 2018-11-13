@@ -11,7 +11,8 @@
         "phpspec/phpspec": "^4.0",
         "php-coveralls/php-coveralls": "^2.1",
         "leanphp/phpspec-code-coverage": "^4.2",
-        "phpstan/phpstan": "^0.10.5"
+        "phpstan/phpstan": "^0.10.5",
+        "symfony/process": "^4.1"
     },
     "authors": [
         {

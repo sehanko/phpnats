@@ -16,7 +16,7 @@ class ConnectionTest extends \PHPUnit\Framework\TestCase
      *
      * @var Nats\Connection Client
      */
-    private $c;
+    protected $c;
 
 
     /**
@@ -169,22 +169,18 @@ class ConnectionTest extends \PHPUnit\Framework\TestCase
      */
     public function testSetStreamTimeout()
     {
-        $this->c->socket()->setTimeout(1);
-        $before = time();
+        $this->c->socket()->setTimeout(0.1);
+        $before = microtime(true);
         $this->c->request(
             'nonexistantsubject',
             'test',
             function ($res) {
             }
         );
-        $timeTaken = (time() - $before);
+        $timeTaken = (microtime(true) - $before);
 
-        $this->assertGreaterThan(0, $timeTaken);
-        $this->assertLessThan(3, $timeTaken);
-
-        $meta = stream_get_meta_data($this->c->socket()->getRawSocket());
-
-        $this->assertTrue($meta['timed_out']);
+        $this->assertGreaterThan(0.1, $timeTaken);
+        $this->assertLessThan(0.2, $timeTaken);
     }
 
 
