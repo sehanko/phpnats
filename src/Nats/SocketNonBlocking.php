@@ -70,20 +70,27 @@ class SocketNonBlocking extends Socket
             if (false === ($numChangedStreams = stream_select($read, $write, $except, $timeoutSec, $timeoutUsec))) {
                 throw new \Exception("Stream select failed");
             } elseif ($numChangedStreams > 0) {
-                // if we go data pushing start along, so timeout is between data
-                //$start = microtime(true);
                 $needMore = true;
                 if ($len > 0) {
                     $chunk = fread($this->socket, $needBytes);
+
                     $buffer .= $chunk;
                     $chunkSize = strlen($chunk);
+                    if ($chunkSize > 0) {
+                        // if we go data pushing start along, so timeout is between data
+                        $start = microtime(true);
+                    }
                     $needBytes -= $chunkSize;
 
                     if ($needBytes <= 0) {
                         $needMore = false;
                     }
                 } else {
-                    $buffer .= fgets($this->socket);
+                    $chunk = fgets($this->socket);
+                    if ($chunk !== false) {
+                        $buffer .= $chunk;
+                        $start = microtime(true);
+                    }
                     // fgets will stop at a newline, but if the socket contains less then the full line
                     // it will stop at that point
                     if (substr($buffer, -1) === "\n") {
