@@ -70,7 +70,7 @@ class Socket
         if ($this->isConnected() === true) {
             if (is_numeric($seconds) === true) {
                 try {
-                    [$seconds, $microseconds] = $this->secondsToSecondsAndMicroSeconds($seconds);
+                    list($seconds, $microseconds) = $this->secondsToSecondsAndMicroSeconds($seconds);
                     return stream_set_timeout($this->socket, $seconds, $microseconds);
                 } catch (\Exception $e) {
                     return false;
