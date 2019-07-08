@@ -140,11 +140,15 @@ class Socket
      * Receives a message thought the stream.
      *
      * @param integer $len Number of bytes to receive.
-     *
+     * @param float   $timeout Overall timeout to receive data
      * @return string
      */
-    public function receive($len = 0)
+    public function receive($len = 0, $timeout = 0.0)
     {
+        if ($timeout > 0) {
+            $this->setTimeout($timeout);
+        }
+
         if ($len > 0) {
             $chunkSize     = $this->chunkSize;
             $line          = null;

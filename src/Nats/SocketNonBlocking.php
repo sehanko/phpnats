@@ -46,44 +46,61 @@ class SocketNonBlocking extends Socket
     /**
      * Receives a message thought the stream.
      *
-     * @param integer $len Number of bytes to receive.
+     * @throws \Exception
+     * @param integer $len     Number of bytes to receive.
+     * @param float   $timeout Overall timeout to receive data
      *
      * @return string
      */
-    public function receive($len = 0)
+    public function receive($len = 0, $timeout = 0.0)
     {
         $read = [$this->socket];
         $write = $except = [];
 
+        if ($timeout <= 0) {
+            $timeout = $this->readTimeout;
+        }
 
-        [$timeoutSec, $timeoutUsec] = $this->secondsToSecondsAndMicroSeconds($this->readTimeout);
-        $start = microtime(true);
-        $running = 0;
+        list($timeoutSec, $timeoutUsec) = $this->secondsToSecondsAndMicroSeconds($timeout);
+
+        $start             = microtime(true);
+        $running           = 0;
         $numChangedStreams = 0;
 
-        $buffer = null;
+        $buffer        = null;
         $receivedBytes = 0;
-        $loops =0;
-        $needBytes = $len;
-        $needMore = false;
+        $loops         = 0;
+        $needBytes     = $len;
+        $needMore      = false;
+
         do {
-            if (false === ($numChangedStreams = stream_select($read, $write, $except, $timeoutSec, $timeoutUsec))) {
+            $numChangedStreams = stream_select($read, $write, $except, $timeoutSec, $timeoutUsec);
+            if ($numChangedStreams === false) {
                 throw new \Exception("Stream select failed");
-            } elseif ($numChangedStreams > 0) {
-                // if we go data pushing start along, so timeout is between data
-                //$start = microtime(true);
+            }
+
+            if ($numChangedStreams > 0) {
                 $needMore = true;
                 if ($len > 0) {
                     $chunk = fread($this->socket, $needBytes);
+
                     $buffer .= $chunk;
                     $chunkSize = strlen($chunk);
+                    if ($chunkSize > 0) {
+                        // if we go data pushing start along, so timeout is between data
+                        $start = microtime(true);
+                    }
                     $needBytes -= $chunkSize;
 
                     if ($needBytes <= 0) {
                         $needMore = false;
                     }
                 } else {
-                    $buffer .= fgets($this->socket);
+                    $chunk = fgets($this->socket);
+                    if ($chunk !== false) {
+                        $buffer .= $chunk;
+                        $start = microtime(true);
+                    }
                     // fgets will stop at a newline, but if the socket contains less then the full line
                     // it will stop at that point
                     if (substr($buffer, -1) === "\n") {
@@ -93,15 +110,15 @@ class SocketNonBlocking extends Socket
             }
             $running = microtime(true)-$start;
             $loops++;
-        } while ($needMore && $running < $this->readTimeout);
+        } while ($needMore && $running < $timeout);
 
         if ($this->debug) {
-            if ($running >= $this->readTimeout) {
+            if ($running >= $timeout) {
                 echo "xxxx Timeout reading len($len)\n";
             }
             echo "xxxx loops: $loops\n";
             echo "xxxx bytes: ".strlen($buffer)."\n";
-            printf('<<<< %s\r\n', substr($buffer, 0, 100));
+            printf("<<<< %s\n", substr($buffer, 0, 100));
         }
 
         return $buffer;
