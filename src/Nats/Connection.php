@@ -406,7 +406,54 @@ class Connection
     {
         $count = 0;
         while ($this->socket->isActive()) {
-            $line = $this->socket->receive();
+            $line = $this->socket->receive(0);
+
+            if ($line === null) {
+                return $this;
+            }
+
+            if (strpos($line, 'PING') === 0) {
+                $this->handlePING();
+            }
+
+            if (strpos($line, 'MSG') === 0) {
+                $count++;
+                $this->handleMSG($line);
+                if (($quantity !== 0) && ($count >= $quantity)) {
+                    return $this;
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Waits for messages with time limit
+     *
+     * @param integer $quantity Number of messages to wait for.
+     * @param float $timeout max time to wait data
+     *
+     * @return Connection $connection Connection object
+     */
+    public function waitWithTimeout($quantity = 0, $timeout = 0.0)
+    {
+        if ($timeout <= 0) {
+            return $this->wait($quantity);
+        }
+
+        $count     = 0;
+        $startTime = microtime(true);
+
+        while ($this->socket->isActive()) {
+            $runTime = microtime(true) - $startTime;
+            $elapsed = $timeout - $runTime;
+
+            if ($elapsed <= 0) {
+                return $this;
+            }
+
+            $line = $this->socket->receive(0, $elapsed);
 
             if ($line === null) {
                 return $this;
