@@ -318,6 +318,29 @@ class Connection
     }
 
     /**
+     * RequestWithTimeout does a request with time limit and executes a callback with the response.
+     *
+     * @param string $subject Message topic.
+     * @param string $payload Message data.
+     * @param float $timeout max time to wait response
+     * @param \Closure $callback Closure to be executed as callback.
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function requestWithTimeout($subject, $payload, $timeout = 0.0, \Closure $callback)
+    {
+        $inbox = uniqid('_INBOX.');
+        $sid   = $this->subscribe(
+            $inbox,
+            $callback
+        );
+        $this->unsubscribe($sid, 1);
+        $this->publish($subject, $payload, $inbox);
+        $this->waitWithTimeout(1, $timeout);
+    }
+
+    /**
      * Subscribes to an specific event given a subject.
      *
      * @param string   $subject  Message topic.
